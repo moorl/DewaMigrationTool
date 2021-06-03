@@ -1,0 +1,43 @@
+{
+    "name": "appflix/dewa-migration-tool",
+    "description": "DeliveryWare | Migration Tool",
+    "keywords": ["restaurant", "delivery", "theme"],
+    "version": "0.0.1",
+    "type": "shopware-platform-plugin",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Appflix UG",
+            "homepage": "https://www.app-flix.de"
+        }
+    ],
+    "require": {
+        "shopware/core": "6.4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Appflix\\DewaMigrationTool\\": "src/"
+        }
+    },
+    "extra": {
+        "shopware-plugin-class": "Appflix\\DewaMigrationTool\\AppflixDewaMigrationTool",
+        "plugin-icon": "src/Resources/public/icon.png",
+        "copyright": "(c) by Appflix UG",
+        "label": {
+            "en-GB": "DeliveryWare | Migration Tool",
+            "de-DE": "DeliveryWare | Migration Tool"
+        },
+        "description": {
+            "de-DE": "\uD83E\uDC12 Support von www.deliveryware.de",
+            "en-GB": "\uD83E\uDC12 Support by www.deliveryware.de"
+        },
+        "manufacturerLink": {
+            "en-GB": "https://www.deliveryware.de",
+            "de-DE": "https://www.deliveryware.de"
+        },
+        "supportLink": {
+            "en-GB": "https://www.deliveryware.de",
+            "de-DE": "https://www.deliveryware.de"
+        }
+    }
+}
