@@ -3,8 +3,6 @@
 namespace Appflix\DewaMigrationTool\Controller;
 
 use Appflix\DewaMigrationTool\Service\MigrationService;
-use Appflix\DewaShop\Core\Defaults;
-use Appflix\DewaShop\Core\Service\DataService;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -25,30 +23,30 @@ class MigrationController
     }
 
     /**
-     * @Route("/api/dewa/settings/migration/install/{name}/{salesChannelId}", name="api.dewa.settings.demo-data.install", methods={"POST"})
+     * @Route("/api/dewa/settings/migration/install/{name}/{salesChannelId}", name="api.dewa.settings.migration.install", methods={"POST"})
      */
     public function migrationInstall(Request $request): JsonResponse
     {
-        if ($salesChannelId && !in_array($salesChannelId, ['undefined','null'])) {
-            $this->migrationService->setSalesChannelId($salesChannelId);
+        if ($request->get('salesChannelId') && !in_array($request->get('salesChannelId'), ['undefined','null'])) {
+            $this->migrationService->setSalesChannelId($request->get('salesChannelId'));
         }
 
-        $this->migrationService->remove(Defaults::NAME, 'demo');
-        $this->migrationService->install(Defaults::NAME, 'demo', $name);
+        $this->migrationService->remove();
+        $this->migrationService->install($request->get('provider'));
 
         return new JsonResponse([]);
     }
 
     /**
-     * @Route("/api/dewa/settings/migration/remove/{salesChannelId}", name="api.dewa.settings.demo-data.remove", methods={"GET"})
+     * @Route("/api/dewa/settings/migration/remove/{salesChannelId}", name="api.dewa.settings.migration.remove", methods={"POST"})
      */
-    public function migrationRemove(?string $salesChannelId = null): JsonResponse
+    public function migrationRemove(Request $request): JsonResponse
     {
-        if ($salesChannelId && !in_array($salesChannelId, ['undefined','null'])) {
-            $this->migrationService->setSalesChannelId($salesChannelId);
+        if ($request->get('salesChannelId') && !in_array($request->get('salesChannelId'), ['undefined','null'])) {
+            $this->migrationService->setSalesChannelId($request->get('salesChannelId'));
         }
 
-        $this->migrationService->remove(Defaults::NAME, 'demo');
+        $this->migrationService->remove();
 
         return new JsonResponse([]);
     }

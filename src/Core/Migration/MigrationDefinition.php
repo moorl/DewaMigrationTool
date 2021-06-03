@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Appflix\DewaShop\Core\Content\Migration;
+namespace Appflix\DewaMigrationTool\Core\Migration;
 
 use Appflix\DewaShop\Core\Content\Ingredient\Aggregate\IngredientMigration\IngredientMigrationDefinition;
 use Appflix\DewaShop\Core\Content\Ingredient\IngredientDefinition;

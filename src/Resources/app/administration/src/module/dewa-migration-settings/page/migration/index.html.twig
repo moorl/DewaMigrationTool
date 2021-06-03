@@ -1,0 +1,32 @@
+<sw-page class="dewa-settings-migration">
+    <template slot="content">
+        <sw-card-view>
+            <sw-card :isLoading="isLoading" :title="$tc('dewa-shop.cards.general')">
+                <sw-select-field
+                        :label="$tc('dewa-migration.properties.provider')"
+                        v-model="item.provider">
+                    <option value="takeaway">
+                        {{ $tc('dewa-migration.provider.takeaway') }}
+                    </option>
+                </sw-select-field>
+
+                <sw-entity-single-select
+                        :label="$tc('dewa-shop.properties.salesChannel')"
+                        v-model="item.salesChannelId"
+                        labelProperty="name"
+                        entity="sales_channel">
+                </sw-entity-single-select>
+
+                <sw-button variant="dewa"
+                           @click="install()">
+                    {{ $tc('dewa-shop.action.install') }}
+                </sw-button>
+
+                <sw-button variant="dewa"
+                           @click="remove()">
+                    {{ $tc('dewa-shop.action.remove') }}
+                </sw-button>
+            </sw-card>
+        </sw-card-view>
+    </template>
+</sw-page>

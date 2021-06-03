@@ -1,11 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Appflix\DewaMigrationTool\Service;
+namespace Appflix\DewaMigrationTool\Core;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 use Psr\Log\LoggerInterface;
+use Shopware\Core\Content\Media\MediaService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\DefinitionInstanceRegistry;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
@@ -21,15 +22,18 @@ class MigrationService
     private string $salesChannelId;
     private bool $logEnabled;
     private Context $context;
+    private MediaService $mediaService;
 
     public function __construct(
         DefinitionInstanceRegistry $definitionInstanceRegistry,
         SystemConfigService $systemConfigService,
+        MediaService $mediaService,
         ?string $projectDir = null
     )
     {
         $this->definitionInstanceRegistry = $definitionInstanceRegistry;
         $this->systemConfigService = $systemConfigService;
+        $this->mediaService = $mediaService;
         $this->logFile = $projectDir . '/var/log/dewa-migration-tool.log';
 
         $this->client = new Client([
@@ -38,6 +42,16 @@ class MigrationService
         ]);
 
         $this->context = Context::createDefaultContext();
+    }
+
+    public function remove(): void
+    {
+
+    }
+
+    public function install(string $provider): void
+    {
+
     }
 
     /**

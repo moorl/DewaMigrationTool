@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Appflix\DewaShop\Migration;
+namespace Appflix\DewaMigrationTool\Migration;
 
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Migration\InheritanceUpdaterTrait;

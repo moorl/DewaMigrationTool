@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="Appflix\DewaMigrationTool\Core\MigrationService" public="true">
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\DefinitionInstanceRegistry"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            <argument type="service" id="Shopware\Core\Content\Media\MediaService"/>
+            <argument>%kernel.project_dir%</argument>
+        </service>
+
+        <service id="Appflix\DewaMigrationTool\Controller\MigrationController" public="true">
+            <argument type="service" id="Appflix\DewaMigrationTool\Core\MigrationService"/>
+        </service>
+
+        <service id="Appflix\DewaMigrationTool\Core\Migration\MigrationDefinition">
+            <tag name="shopware.entity.definition" entity="dewa_migration" />
+        </service>
+    </services>
+</container>
