@@ -18,10 +18,11 @@ Component.register('dewa-migration-settings-migration', {
     data() {
         return {
             item: {
-                salesChannelId: null
+                salesChannelId: null,
+                restaurantId: 'O3515N01'
             },
             options: null,
-            isLoading: true,
+            isLoading: false,
             processSuccess: false
         };
     },

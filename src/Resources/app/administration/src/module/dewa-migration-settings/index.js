@@ -5,7 +5,7 @@ import './page/migration';
 Module.register('dewa-migration-settings', {
     type: 'plugin',
     name: 'dewa-migration-settings',
-    title: 'dewa-migration.navigation.main',
+    title: 'dewa-shop.navigation.migration',
 
     routes: {
         migration: {
@@ -23,7 +23,7 @@ Module.register('dewa-migration-settings', {
             to: 'dewa.migration.settings.migration',
             group: 'dewa',
             icon: 'default-object-lab-flask',
-            label: 'dewa-migration.navigation.main'
+            label: 'dewa-shop.navigation.migration'
         }
     ]
 });

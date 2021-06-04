@@ -2,6 +2,9 @@
 
 namespace Appflix\DewaMigrationTool\Core;
 
+use Appflix\DewaShop\Core\Content\Shop\ShopEntity;
+use Appflix\DewaShop\Core\Service\DataService;
+use Appflix\DewaShop\Core\System\DataInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
@@ -9,8 +12,12 @@ use Psr\Log\LoggerInterface;
 use Shopware\Core\Content\Media\MediaService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\DefinitionInstanceRegistry;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Takeaway\Http\Requests\GetRestaurantRequest;
+use Takeaway\Takeaway;
 
 class MigrationService
 {
@@ -23,17 +30,21 @@ class MigrationService
     private bool $logEnabled;
     private Context $context;
     private MediaService $mediaService;
+    private DataService $dataService;
+    private DataInterface $dataObject;
 
     public function __construct(
         DefinitionInstanceRegistry $definitionInstanceRegistry,
         SystemConfigService $systemConfigService,
         MediaService $mediaService,
+        DataService $dataService,
         ?string $projectDir = null
     )
     {
         $this->definitionInstanceRegistry = $definitionInstanceRegistry;
         $this->systemConfigService = $systemConfigService;
         $this->mediaService = $mediaService;
+        $this->dataService = $dataService;
         $this->logFile = $projectDir . '/var/log/dewa-migration-tool.log';
 
         $this->client = new Client([
@@ -41,17 +52,97 @@ class MigrationService
             'allow_redirects' => false,
         ]);
 
+        $this->dataObject = new MigrationDataObject();
         $this->context = Context::createDefaultContext();
     }
 
     public function remove(): void
     {
-
+        $this->dataService->cleanUpShopwareTables($this->dataObject);
     }
 
-    public function install(string $provider): void
+    public function install(string $shopId, string $restaurantId): void
     {
+        $criteria = new Criteria([$shopId]);
+        $criteria->setLimit(1);
 
+        $shopRepository = $this->definitionInstanceRegistry->getRepository('dewa_shop');
+
+        /** @var ShopEntity $shop */
+        $shop = $shopRepository->search($criteria, $this->context)->get($shopId);
+
+        if (!$shop) {
+            throw new \Exception("No Shop selected or missing configuration.");
+        }
+
+        $restaurant = new GetRestaurantRequest(
+            $restaurantId,
+            $shop->getZipcode(),
+            $shop->getLocationLat(),
+            $shop->getLocationLon()
+        );
+
+        if (empty($restaurant)) {
+            throw new \Exception("No Restaurant found, please be sure you have configured a valid shop and a valid restaurant ID from takeaway.");
+        }
+
+        $this->dataService->initTaxes();
+        $this->dataService->initGlobalReplacers($this->dataObject);
+
+        $migrationData = $restaurant->getData();
+        $productNumber = 0;
+
+        $migrationCategoryChildren = [];
+        foreach ($migrationData['categories'] as $migrationCategory) {
+            $migrationProducts = [];
+
+            foreach ($migrationCategory->__get('products') as $migrationProduct) {
+                $productNumber++;
+
+                $migrationProducts[] = [
+                    'id' => md5($migrationProduct->id),
+                    'name' => $migrationProduct->name,
+                    'description' => $migrationProduct->description,
+                    "productNumber" => str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT),
+                    "stock" => 100,
+                    "taxId" => "{TAX_ID_REDUCED}",
+                    "price" => $migrationProduct->deliveryPrice,
+                    "visibilities" => [
+                        [
+                            "salesChannelId" => "{SALES_CHANNEL_ID}",
+                            "visibility" => 30
+                        ]
+                    ],
+                    /*"cover" => ["mediaId" => ""]*/
+                ];
+            }
+
+            $migrationCategoryChildren[] = [
+                "active" => true,
+                'id' => md5($migrationCategory->id),
+                'name' => $migrationCategory->name,
+                'mediaId' => $migrationCategory->image,
+                'products' => $migrationProducts
+            ];
+        }
+
+        $migrationCategories = [
+            [
+                "parentId" => "{NAVIGATION_CATEGORY_ID}",
+                "cmsPageId" => "{CMS_PAGE_ID}",
+                "active" => true,
+                "name" => $migrationData['name'],
+                "children" => $migrationCategoryChildren
+            ]
+        ];
+
+        $migrationCategories = json_decode(strtr(json_encode($migrationCategories), $this->dataObject->getGlobalReplacers()), true);
+
+        $this->dataService->enrichData($migrationCategories, 'category', $this->dataObject);
+
+        /** @var EntityRepositoryInterface $repository */
+        $repository = $this->definitionInstanceRegistry->getRepository('category');
+        $repository->upsert($migrationCategories, $this->context);
     }
 
     /**

@@ -8,6 +8,7 @@
             <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\DefinitionInstanceRegistry"/>
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
             <argument type="service" id="Shopware\Core\Content\Media\MediaService"/>
+            <argument type="service" id="Appflix\DewaShop\Core\Service\DataService"/>
             <argument>%kernel.project_dir%</argument>
         </service>
 

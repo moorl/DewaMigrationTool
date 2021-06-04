@@ -2,7 +2,7 @@
 
 namespace Appflix\DewaMigrationTool\Controller;
 
-use Appflix\DewaMigrationTool\Service\MigrationService;
+use Appflix\DewaMigrationTool\Core\MigrationService;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -23,7 +23,7 @@ class MigrationController
     }
 
     /**
-     * @Route("/api/dewa/settings/migration/install/{name}/{salesChannelId}", name="api.dewa.settings.migration.install", methods={"POST"})
+     * @Route("/api/dewa/settings/migration/install", name="api.dewa.settings.migration.install", methods={"POST"})
      */
     public function migrationInstall(Request $request): JsonResponse
     {
@@ -32,13 +32,13 @@ class MigrationController
         }
 
         $this->migrationService->remove();
-        $this->migrationService->install($request->get('provider'));
+        $this->migrationService->install($request->get('shopId'), $request->get('restaurantId'));
 
         return new JsonResponse([]);
     }
 
     /**
-     * @Route("/api/dewa/settings/migration/remove/{salesChannelId}", name="api.dewa.settings.migration.remove", methods={"POST"})
+     * @Route("/api/dewa/settings/migration/remove", name="api.dewa.settings.migration.remove", methods={"POST"})
      */
     public function migrationRemove(Request $request): JsonResponse
     {

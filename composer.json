@@ -16,6 +16,7 @@
     },
     "autoload": {
         "psr-4": {
+            "Takeaway\\": "vendor/php-takeaway/src/",
             "Appflix\\DewaMigrationTool\\": "src/"
         }
     },

@@ -1,0 +1,21 @@
+{
+    "name": "woutervdbrink/takeaway",
+    "description": "Unofficial Takeaway.com API implementation",
+    "type": "library",
+    "require": {
+        "php": "^7.1|^8.0",
+        "guzzlehttp/guzzle": "^6.3"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Wouter van den Brink",
+            "email": "git@woutervdb.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Takeaway\\": "src/"
+        }
+    }
+}

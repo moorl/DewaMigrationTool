@@ -2,20 +2,29 @@
     <template slot="content">
         <sw-card-view>
             <sw-card :isLoading="isLoading" :title="$tc('dewa-shop.cards.general')">
-                <sw-select-field
-                        :label="$tc('dewa-migration.properties.provider')"
-                        v-model="item.provider">
-                    <option value="takeaway">
-                        {{ $tc('dewa-migration.provider.takeaway') }}
-                    </option>
-                </sw-select-field>
+                <sw-entity-single-select
+                        :label="$tc('dewa-shop.properties.shop')"
+                        v-model="item.shopId"
+                        labelProperty="name"
+                        entity="dewa_shop"
+                        required
+                        validation="required">
+                </sw-entity-single-select>
 
                 <sw-entity-single-select
                         :label="$tc('dewa-shop.properties.salesChannel')"
                         v-model="item.salesChannelId"
                         labelProperty="name"
-                        entity="sales_channel">
+                        entity="sales_channel"
+                        required
+                        validation="required">
                 </sw-entity-single-select>
+
+                <sw-field :label="$tc('dewa-shop.properties.restaurantId')"
+                          v-model="item.restaurantId"
+                          required
+                          placeholder="O3515N01"
+                          validation="required"></sw-field>
 
                 <sw-button variant="dewa"
                            @click="install()">
