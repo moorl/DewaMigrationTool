@@ -48,6 +48,7 @@ class GetRestaurantRequest extends Request
         return [
             'ri' => 'id',
             'nm' => 'name',
+            'mh' => 'header',
             'op' => '!open',
             'oo.lu' => 'logo',
             'oo.sl' => 'slogan',
@@ -118,7 +119,7 @@ class GetRestaurantRequest extends Request
                             'id' => 'id',
                             'nm' => 'name',
                             'ds' => 'description',
-                            'ds' => 'description',
+                            'pu' => 'image',
                             'ah' => '#orderMethods',
                             'pc' => '.deliveryPrice',
                             'tc' => '.pickupPrice',

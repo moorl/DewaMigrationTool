@@ -22,7 +22,6 @@
     },
     "extra": {
         "shopware-plugin-class": "Appflix\\DewaMigrationTool\\AppflixDewaMigrationTool",
-        "plugin-icon": "src/Resources/public/icon.png",
         "copyright": "(c) by Appflix UG",
         "label": {
             "en-GB": "DeliveryWare | Migration Tool",

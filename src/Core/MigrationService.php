@@ -17,7 +17,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Takeaway\Http\Requests\GetRestaurantRequest;
-use Takeaway\Takeaway;
 
 class MigrationService
 {
@@ -92,6 +91,25 @@ class MigrationService
         $migrationData = $restaurant->getData();
         $productNumber = 0;
 
+        $migrationShops = [[
+            'id' => $shop->getId(),
+            'name' => $migrationData['name'],
+            'mediaId' => $migrationData['logo'],
+            'street' => $migrationData['street'],
+            'city' => $migrationData['city'],
+            'zipCode' => $migrationData['postalCode'],
+            'locationLat' => $migrationData['latitude'],
+            'locationLon' => $migrationData['longitude']
+        ]];
+
+        $this->dataService->enrichData($migrationShops, 'dewa_shop', $this->dataObject);
+
+        /** @var EntityRepositoryInterface $repository */
+        $repository = $this->definitionInstanceRegistry->getRepository('dewa_shop');
+        $repository->upsert($migrationShops, $this->context);
+
+        //dump($migrationData);exit;
+
         $migrationCategoryChildren = [];
         foreach ($migrationData['categories'] as $migrationCategory) {
             $migrationProducts = [];
@@ -113,7 +131,7 @@ class MigrationService
                             "visibility" => 30
                         ]
                     ],
-                    /*"cover" => ["mediaId" => ""]*/
+                    "cover" => ["mediaId" => $migrationProduct->image]
                 ];
             }
 
@@ -132,6 +150,7 @@ class MigrationService
                 "cmsPageId" => "{CMS_PAGE_ID}",
                 "active" => true,
                 "name" => $migrationData['name'],
+                'mediaId' => $migrationData['header'],
                 "children" => $migrationCategoryChildren
             ]
         ];

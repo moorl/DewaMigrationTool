@@ -80,6 +80,9 @@ class Request
     public function execute()
     {
         $response = Client::instance()->request($this->getBody());
+
+        //echo $response;exit;
+
         $xml = simplexml_load_string($response);
 
         if (isset($xml->error)) {
