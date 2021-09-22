@@ -3,13 +3,12 @@
 namespace Appflix\DewaMigrationTool\Core;
 
 use Appflix\DewaShop\Core\Content\Shop\ShopEntity;
-use Appflix\DewaShop\Core\Service\DataService;
-use Appflix\DewaShop\Core\System\DataInterface;
+use Appflix\Foundation\Core\Service\DataService;
+use Appflix\Foundation\Core\System\DataInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Content\Media\MediaService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\DefinitionInstanceRegistry;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
@@ -28,21 +27,18 @@ class MigrationService
     private string $salesChannelId;
     private bool $logEnabled;
     private Context $context;
-    private MediaService $mediaService;
     private DataService $dataService;
     private DataInterface $dataObject;
 
     public function __construct(
         DefinitionInstanceRegistry $definitionInstanceRegistry,
         SystemConfigService $systemConfigService,
-        MediaService $mediaService,
         DataService $dataService,
         ?string $projectDir = null
     )
     {
         $this->definitionInstanceRegistry = $definitionInstanceRegistry;
         $this->systemConfigService = $systemConfigService;
-        $this->mediaService = $mediaService;
         $this->dataService = $dataService;
         $this->logFile = $projectDir . '/var/log/dewa-migration-tool.log';
 
@@ -94,7 +90,7 @@ class MigrationService
         $migrationShops = [[
             'id' => $shop->getId(),
             'name' => $migrationData['name'],
-            'mediaId' => $migrationData['logo'],
+            'mediaId' => $this->dataService->getMediaId($migrationData['logo'], 'cms_page', $this->dataObject),
             'street' => $migrationData['street'],
             'city' => $migrationData['city'],
             'zipCode' => $migrationData['postalCode'],
@@ -117,7 +113,19 @@ class MigrationService
             foreach ($migrationCategory->__get('products') as $migrationProduct) {
                 $productNumber++;
 
-                $migrationProducts[] = [
+                $cover = $this->dataService->getMediaId($migrationProduct->image, 'product', $this->dataObject);
+                if ($cover) {
+                    $cover = [
+                        "cover" => [
+                            "id" => md5("cover" . $migrationProduct->id),
+                            "mediaId" => $cover
+                        ]
+                    ];
+                } else {
+                    $cover = [];
+                }
+
+                $migrationProducts[] = array_merge([
                     'id' => md5($migrationProduct->id),
                     'name' => $migrationProduct->name,
                     'description' => $migrationProduct->description,
@@ -125,21 +133,21 @@ class MigrationService
                     "stock" => 100,
                     "taxId" => "{TAX_ID_REDUCED}",
                     "price" => $migrationProduct->deliveryPrice,
+                    "listPrice" => $migrationProduct->deliveryPrice,
                     "visibilities" => [
                         [
                             "salesChannelId" => "{SALES_CHANNEL_ID}",
                             "visibility" => 30
                         ]
                     ],
-                    "cover" => ["mediaId" => $migrationProduct->image]
-                ];
+                ], $cover);
             }
 
             $migrationCategoryChildren[] = [
                 "active" => true,
                 'id' => md5($migrationCategory->id),
                 'name' => $migrationCategory->name,
-                'mediaId' => $migrationCategory->image,
+                'mediaId' => $this->dataService->getMediaId($migrationCategory->image, 'category', $this->dataObject),
                 'products' => $migrationProducts
             ];
         }
@@ -150,7 +158,7 @@ class MigrationService
                 "cmsPageId" => "{CMS_PAGE_ID}",
                 "active" => true,
                 "name" => $migrationData['name'],
-                'mediaId' => $migrationData['header'],
+                'mediaId' => $this->dataService->getMediaId($migrationData['header'], 'category', $this->dataObject),
                 "children" => $migrationCategoryChildren
             ]
         ];

@@ -19,10 +19,12 @@ Module.register('dewa-migration-settings', {
 
     settingsItem: [
         {
+            privilege: 'system.system_config',
             name: 'dewa-migration-settings-migration',
             to: 'dewa.migration.settings.migration',
-            group: 'dewa',
-            icon: 'default-object-lab-flask',
+            group: 'plugins',
+            id: 'appflix-setting-migration',
+            iconComponent: 'appflix-svg-appflix',
             label: 'dewa-shop.navigation.migration'
         }
     ]
