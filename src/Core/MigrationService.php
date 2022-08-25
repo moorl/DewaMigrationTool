@@ -3,8 +3,8 @@
 namespace Appflix\DewaMigrationTool\Core;
 
 use Appflix\DewaShop\Core\Content\Shop\ShopEntity;
-use Appflix\Foundation\Core\Service\DataService;
-use Appflix\Foundation\Core\System\DataInterface;
+use MoorlFoundation\Core\Service\DataService;
+use MoorlFoundation\Core\System\DataInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;

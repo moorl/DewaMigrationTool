@@ -7,7 +7,7 @@
         <service id="Appflix\DewaMigrationTool\Core\MigrationService" public="true">
             <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\DefinitionInstanceRegistry"/>
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
-            <argument type="service" id="Appflix\Foundation\Core\Service\DataService"/>
+            <argument type="service" id="MoorlFoundation\Core\Service\DataService"/>
             <argument>%kernel.project_dir%</argument>
         </service>
 

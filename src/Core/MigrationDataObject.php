@@ -4,7 +4,7 @@ namespace Appflix\DewaMigrationTool\Core;
 
 use Appflix\DewaMigrationTool\AppflixDewaMigrationTool;
 use Appflix\DewaShop\Core\System\DewaShopDataExtension;
-use Appflix\Foundation\Core\System\DataInterface;
+use MoorlFoundation\Core\System\DataInterface;
 
 class MigrationDataObject extends DewaShopDataExtension implements DataInterface
 {

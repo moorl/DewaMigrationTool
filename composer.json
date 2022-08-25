@@ -2,7 +2,7 @@
     "name": "appflix/dewa-migration-tool",
     "description": "DeliveryWare | Migration Tool",
     "keywords": ["restaurant", "delivery", "theme"],
-    "version": "1.2.0",
+    "version": "1.4.0",
     "type": "shopware-platform-plugin",
     "license": "proprietary",
     "authors": [
@@ -13,7 +13,7 @@
     ],
     "require": {
         "shopware/core": "6.4.*",
-        "appflix/dewa-shop": "1.2.*"
+        "appflix/dewa-shop": "1.4.*"
     },
     "autoload": {
         "psr-4": {
