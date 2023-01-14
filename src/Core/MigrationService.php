@@ -8,13 +8,11 @@ use MoorlFoundation\Core\System\DataInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
-use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\DefinitionInstanceRegistry;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Takeaway\Http\Requests\GetRestaurantRequest;
 
 class MigrationService
@@ -132,8 +130,8 @@ class MigrationService
                     "productNumber" => str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT),
                     "stock" => 100,
                     "taxId" => "{TAX_ID_REDUCED}",
-                    "price" => (float) $migrationProduct->deliveryPrice,
-                    "listPrice" => (float) $migrationProduct->deliveryPrice,
+                    "price" => $migrationProduct->deliveryPrice,
+                    "listPrice" => $migrationProduct->deliveryPrice > 0 ? $migrationProduct->deliveryPrice : null,
                     "visibilities" => [
                         [
                             "salesChannelId" => "{SALES_CHANNEL_ID}",
