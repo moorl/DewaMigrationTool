@@ -132,8 +132,8 @@ class MigrationService
                     "productNumber" => str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT),
                     "stock" => 100,
                     "taxId" => "{TAX_ID_REDUCED}",
-                    "price" => $migrationProduct->deliveryPrice,
-                    "listPrice" => $migrationProduct->deliveryPrice,
+                    "price" => (float) $migrationProduct->deliveryPrice,
+                    "listPrice" => (float) $migrationProduct->deliveryPrice,
                     "visibilities" => [
                         [
                             "salesChannelId" => "{SALES_CHANNEL_ID}",
