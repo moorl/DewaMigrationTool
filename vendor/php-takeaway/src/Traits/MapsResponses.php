@@ -253,6 +253,8 @@ trait MapsResponses
                 foreach ($value as $element) {
                     $result[] = new $class($this->getData($local['mapping'], $element), $local['extra'] ?? []);
                 }
+            } else {
+                $result[] = new $class($this->getData($local['mapping'], $value), $local['extra'] ?? []);
             }
         } else {
             $result = new $local['class']($this->getData($local['mapping'], $value), $local['extra'] ?? []);

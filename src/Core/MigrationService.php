@@ -7,10 +7,8 @@ use MoorlFoundation\Core\Service\DataService;
 use MoorlFoundation\Core\System\DataInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Psr7\Request;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\DefinitionInstanceRegistry;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Takeaway\Http\Requests\GetRestaurantRequest;
@@ -28,7 +26,7 @@ class MigrationService
     private Context $context;
     private DataService $dataService;
     private DataInterface $dataObject;
-    private array $allergensMapping = [
+    private array $propertyMapping = [
         'new_a' => '{MD5:ALLERGENS_A}',
         'new_a1' => '{MD5:ALLERGENS_A1}',
         'new_a2' => '{MD5:ALLERGENS_A2}',
@@ -41,7 +39,7 @@ class MigrationService
         'new_e' => '{MD5:ALLERGENS_E}',
         'new_f' => '{MD5:ALLERGENS_F}',
         'new_g' => '{MD5:ALLERGENS_G}',
-        'new_h' => '{MD5:ALLERGENS_H}',
+        'new_wh' => '{MD5:ALLERGENS_H}',
         'new_h1' => '{MD5:ALLERGENS_H1}',
         'new_h2' => '{MD5:ALLERGENS_H2}',
         'new_h3' => '{MD5:ALLERGENS_H3}',
@@ -52,14 +50,27 @@ class MigrationService
         'new_n' => '{MD5:ALLERGENS_N}',
         'new_o' => '{MD5:ALLERGENS_O}',
         'new_p' => '{MD5:ALLERGENS_P}',
-        'new_r' => '{MD5:ALLERGENS_R}',
+        'new_1' => '{MD5:ADDITIVES_1}',
+        'new_2' => '{MD5:ADDITIVES_2}',
+        'new_3' => '{MD5:ADDITIVES_3}',
+        'new_4' => '{MD5:ADDITIVES_4}',
+        'new_5' => '{MD5:ADDITIVES_5}',
+        'new_6' => '{MD5:ADDITIVES_6}',
+        'new_7' => '{MD5:ADDITIVES_7}',
+        'new_8' => '{MD5:ADDITIVES_8}',
+        'new_9' => '{MD5:ADDITIVES_9}',
+        'new_10' => '{MD5:ADDITIVES_10}',
+        'new_11' => '{MD5:ADDITIVES_11}',
+        'new_12' => '{MD5:ADDITIVES_12}',
+        'new_13' => '{MD5:ADDITIVES_13}',
+        'new_14' => '{MD5:ADDITIVES_14}',
     ];
 
     public function __construct(
         DefinitionInstanceRegistry $definitionInstanceRegistry,
-        SystemConfigService $systemConfigService,
-        DataService $dataService,
-        ?string $projectDir = null
+        SystemConfigService        $systemConfigService,
+        DataService                $dataService,
+        ?string                    $projectDir = null
     )
     {
         $this->definitionInstanceRegistry = $definitionInstanceRegistry;
@@ -81,19 +92,155 @@ class MigrationService
         $this->dataService->cleanUpShopwareTables($this->dataObject);
     }
 
-    public function install(string $shopId, string $restaurantId): void
+    public function getCover(Product $migrationProduct): ?array
+    {
+        $cover = $this->dataService->getMediaId($migrationProduct->image, 'product', $this->dataObject);
+        if (!$cover) {
+            return null;
+        }
+        return ["cover" => ["id" => md5("cover" . $migrationProduct->id), "mediaId" => $cover]];
+    }
+
+    public function getProperties($value): array
+    {
+        $properties = [];
+        if (!isset($value['id'])) {
+            return $properties;
+        }
+        if (is_array($value['id'])) {
+            foreach ($value['id'] as $item) {
+                if (isset($this->propertyMapping[$item])) {
+                    $properties[] = ['id' => $this->propertyMapping[$item]];
+                }
+            }
+        } else {
+            if (isset($this->propertyMapping[$value['id']])) {
+                $properties[] = ['id' => $this->propertyMapping[$value['id']]];
+            }
+        }
+        return $properties;
+    }
+
+    public function getChildren(Product $migrationProduct, int $productNumber): ?array
+    {
+        if (!$migrationProduct->products) {
+            return [];
+        }
+        $variantNumber = sprintf(
+            "%s.%s",
+            str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT),
+            $this->removeSpecialChars($this->getContentInBrackets($migrationProduct->name))
+        );
+
+        $pos = 1000;
+
+        $children = [[
+            'id' => md5($variantNumber),
+            'productNumber' => $variantNumber,
+            'price' => sprintf("{PRICE:%s|R}", $migrationProduct->deliveryPrice),
+            'stock' => 0,
+            'options' => [[
+                'id' => md5($this->getContentInBrackets($migrationProduct->name)),
+                'name' => $this->getContentInBrackets($migrationProduct->name),
+                'position' => $pos,
+                'groupId' => 'e1a0160326131fd7bc82569ed88b743d'
+            ]]
+        ]];
+        $configuratorSettings = [[
+            'id' => md5($variantNumber),
+            'optionId' => md5($this->getContentInBrackets($migrationProduct->name))
+        ]];
+
+        foreach ($migrationProduct->products as $product) {
+            $variantNumber = sprintf(
+                "%s.%s",
+                str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT),
+                $this->removeSpecialChars($this->getContentInBrackets($product->name))
+            );
+
+            $pos++;
+
+            $children[] = [
+                'id' => md5($variantNumber),
+                'productNumber' => $variantNumber,
+                'price' => sprintf("{PRICE:%s|R}", $product->deliveryPrice),
+                'stock' => 0,
+                'options' => [[
+                    'id' => md5($this->getContentInBrackets($product->name)),
+                    'name' => $this->getContentInBrackets($product->name),
+                    'position' => $pos,
+                    'groupId' => 'e1a0160326131fd7bc82569ed88b743d'
+                ]]
+            ];
+            $configuratorSettings[] = [
+                'id' => md5($variantNumber),
+                'optionId' => md5($this->getContentInBrackets($product->name))
+            ];
+        }
+
+        return [
+            'children' => $children,
+            'configuratorSettings' => $configuratorSettings,
+        ];
+    }
+
+    public function getDewaOptions(Product $migrationProduct): ?array
+    {
+        $dewaOptions = [];
+        if (!$migrationProduct->sideDishes) {
+            return null;
+        }
+
+        $pos = 1000;
+
+        foreach ($migrationProduct->sideDishes as $sideDish) {
+            $pos--;
+            $choices = [];
+            foreach ($sideDish->choices as $choice) {
+                $properties = array_merge(
+                    $this->getProperties($choice->allergens),
+                    $this->getProperties($choice->additives)
+                );
+
+                $choices[] = [
+                    "id" => md5($sideDish->name . $choice->name),
+                    "name" => $choice->name,
+                    "price" => $choice->deliveryPrice,
+                    "properties" => !empty($properties) ? $properties : null,
+                ];
+            }
+            $dewaOptions[] = [
+                "id" => md5($migrationProduct->id . $sideDish->name),
+                "isCollapsible" => count($choices) > 4,
+                "priority" => $pos,
+                "name" => $sideDish->name,
+                "option" => [
+                    "id" => md5($sideDish->name),
+                    "name" => $sideDish->name,
+                    "type" => $sideDish->type == "1" ? 'radio' : 'checkbox',
+                    "items" => $choices
+                ],
+            ];
+        }
+        return $dewaOptions;
+    }
+
+    public function getShop(string $shopId): ShopEntity
     {
         $criteria = new Criteria([$shopId]);
         $criteria->setLimit(1);
-
         $shopRepository = $this->definitionInstanceRegistry->getRepository('dewa_shop');
-
         /** @var ShopEntity $shop */
         $shop = $shopRepository->search($criteria, $this->context)->get($shopId);
-
         if (!$shop) {
             throw new \Exception("No Shop selected or missing configuration.");
         }
+        return $shop;
+    }
+
+    public function install(string $shopId, string $restaurantId): void
+    {
+        $shop = $this->getShop($shopId);
 
         $restaurant = new GetRestaurantRequest(
             $restaurantId,
@@ -101,10 +248,6 @@ class MigrationService
             $shop->getLocationLat(),
             $shop->getLocationLon()
         );
-
-        if (empty($restaurant)) {
-            throw new \Exception("No Restaurant found, please be sure you have configured a valid shop and a valid restaurant ID from takeaway.");
-        }
 
         $this->dataService->initTaxes();
         $this->dataService->initGlobalReplacers($this->dataObject);
@@ -125,148 +268,50 @@ class MigrationService
 
         $this->dataService->enrichData($migrationShops, 'dewa_shop', $this->dataObject);
 
-        /** @var EntityRepositoryInterface $repository */
         $repository = $this->definitionInstanceRegistry->getRepository('dewa_shop');
         $repository->upsert($migrationShops, $this->context);
 
+        $migrationProducts = [];
         $migrationCategoryChildren = [];
         foreach ($migrationData['categories'] as $migrationCategory) {
-            $migrationProducts = [];
-
             /** @var Product $migrationProduct */
-            foreach ($migrationCategory->__get('products') as $migrationProduct) {
-                //dd($migrationProduct);
+            foreach ($migrationCategory->products as $migrationProduct) {
+                if ("O5NQQ3NQQ" === $migrationProduct->id) {
+                    //dd($migrationProduct);
+                }
+                if ($migrationProduct->sideDishes) {
+                    //dd($migrationProduct);
+                }
 
                 $productNumber++;
 
-                /*$cover = $this->dataService->getMediaId($migrationProduct->image, 'product', $this->dataObject);
-                if ($cover) {
-                    $cover = [
-                        "cover" => [
-                            "id" => md5("cover" . $migrationProduct->id),
-                            "mediaId" => $cover
-                        ]
-                    ];
-                } else {
-                    $cover = [];
-                }*/
+                $properties = array_merge(
+                    $this->getProperties($migrationProduct->allergens),
+                    $this->getProperties($migrationProduct->additives)
+                );
 
-                $cover = [];
-                $dewaOptions = [];
-                $configuratorSettings = [];
-                $children = [];
-                if ($migrationProduct->sideDishes) {
-                    if (is_array($migrationProduct->sideDishes)) {
-                        foreach ($migrationProduct->sideDishes as $sideDish) {
-                            if ($sideDish->type == "1") {
-                                foreach ($sideDish->choices as $choice) {
-                                    $children[] = [
-                                        'id' => md5($migrationProduct->id.$choice->id),
-                                        "productNumber" => str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT) . "." . $choice->id,
-                                        "taxId" => "{TAX_ID_REDUCED}",
-                                        "price" => sprintf("{PRICE:%s|R}", $choice->deliveryPrice),
-                                        "options" => [
-                                            [
-                                                "id" => md5($choice->id),
-                                                "name" => $choice->name,
-                                                "group" => [
-                                                    "id" => md5($sideDish->name),
-                                                    "name" => $sideDish->name,
-                                                ]
-                                            ]
-                                        ]
-                                    ];
-
-                                    dd($children);
-
-                                    $configuratorSettings[] = [
-                                        'optionId' => md5($choice->id)
-                                    ];
-                                }
-                            } else {
-                                $choices = [];
-                                foreach ($sideDish->choices as $choice) {
-                                    $properties = [];
-                                    if (isset($choice->allergens['id'])) {
-                                        if (is_array($choice->allergens['id'])) {
-                                            foreach ($choice->allergens['id'] as $allergen) {
-                                                if (isset($this->allergensMapping[$allergen])) {
-                                                    $properties[] = [
-                                                        'id' => $this->allergensMapping[$allergen]
-                                                    ];
-                                                }
-                                            }
-                                        } else {
-                                            if (isset($this->allergensMapping[$choice->allergens['id']])) {
-                                                $properties[] = [
-                                                    'id' => $this->allergensMapping[$choice->allergens['id']]
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $choices[] = [
-                                        "id" => md5($choice->id),
-                                        "name" => $choice->name,
-                                        "price" => $choice->deliveryPrice,
-                                        "properties" => $properties
-                                    ];
-                                }
-
-                                $dewaOptions[] = [
-                                    'id' => md5($migrationProduct->id . $sideDish->name),
-                                    'name' => $sideDish->name,
-                                    "option" => [
-                                        "id" => md5($sideDish->name),
-                                        "name" => $sideDish->name,
-                                        "type" => 'checkbox',
-                                        "items" => $choices
-                                    ],
-                                ];
-                            }
-                        }
-                    }
-                }
-
-                $properties = [];
-                if (isset($migrationProduct->allergens['id'])) {
-                    if (is_array($migrationProduct->allergens['id'])) {
-                        foreach ($migrationProduct->allergens['id'] as $allergen) {
-                            if (isset($this->allergensMapping[$allergen])) {
-                                $properties[] = [
-                                    'id' => $this->allergensMapping[$allergen]
-                                ];
-                            }
-                        }
-                    } else {
-                        if (isset($this->allergensMapping[$migrationProduct->allergens['id']])) {
-                            $properties[] = [
-                                'id' => $this->allergensMapping[$migrationProduct->allergens['id']]
-                            ];
-                        }
-                    }
-                }
-
-                $migrationProducts[] = array_merge([
-                    'id' => md5($migrationProduct->id),
-                    'name' => $migrationProduct->name,
-                    'description' => $migrationProduct->description,
-                    "productNumber" => str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT),
-                    "stock" => 0,
-                    "taxId" => "{TAX_ID_REDUCED}",
-                    "price" => sprintf("{PRICE:%s|R}", $migrationProduct->deliveryPrice),
-                    "visibilities" => [
-                        [
-                            "id" => md5($migrationProduct->id . "1"),
-                            "salesChannelId" => "{SALES_CHANNEL_ID}",
-                            "visibility" => 30
-                        ]
+                $migrationProducts[] = array_merge(
+                    [
+                        'id' => md5($migrationProduct->id),
+                        'name' => $this->entferneEckigeKlammern($migrationProduct->name),
+                        'description' => $migrationProduct->description,
+                        "productNumber" => str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT),
+                        "stock" => 0,
+                        "taxId" => "{TAX_ID_REDUCED}",
+                        "price" => sprintf("{PRICE:%s|R}", $migrationProduct->deliveryPrice),
+                        "visibilities" => [
+                            ["id" => md5($migrationProduct->id . "1"), "salesChannelId" => "{SALES_CHANNEL_ID}", "visibility" => 30]
+                        ],
+                        "properties" => !empty($properties) ? $properties : null,
+                        "categories" => [
+                            ["id" => md5($migrationCategory->id)]
+                        ],
+                        "dewaOptions" => $this->getDewaOptions($migrationProduct),
+                        "_skipEnrichData" => true
                     ],
-                    "properties" => $properties,
-                    "children" => $children,
-                    "configuratorSettings" => $configuratorSettings,
-                    "dewaOptions" => $dewaOptions,
-                ], $cover);
+                    /*$this->getCover($migrationProduct),*/
+                    $this->getChildren($migrationProduct, $productNumber)
+                );
             }
 
             $migrationCategoryChildren[] = [
@@ -274,33 +319,46 @@ class MigrationService
                 'id' => md5($migrationCategory->id),
                 'name' => $migrationCategory->name,
                 'description' => $migrationCategory->description,
-                'mediaId' => $this->dataService->getMediaId($migrationCategory->image, 'category', $this->dataObject),
-                'products' => $migrationProducts
+                //'mediaId' => $this->dataService->getMediaId($migrationCategory->image, 'category', $this->dataObject)
             ];
         }
 
+        $mainCatId = md5("MAINCAT1234");
+
         $migrationCategories = [
             [
+                "id" => $mainCatId,
                 "parentId" => "{NAVIGATION_CATEGORY_ID}",
                 "cmsPageId" => "{CMS_PAGE_ID}",
                 "active" => true,
                 "name" => $migrationData['name'],
                 'description' => $migrationCategory->description,
-                'mediaId' => $this->dataService->getMediaId($migrationData['header'], 'category', $this->dataObject),
+                //'mediaId' => $this->dataService->getMediaId($migrationData['header'], 'category', $this->dataObject),
                 "children" => $migrationCategoryChildren
             ]
         ];
 
         $migrationCategories = json_decode(
-            $this->dataService->processReplace(json_encode($migrationCategories), $this->dataObject),
+            $this->dataService->processReplace(json_encode($migrationCategories), $this->dataObject, 'category'),
             true
         );
-
-        echo json_encode($migrationCategories);exit;
-
-        /** @var EntityRepositoryInterface $repository */
+        $this->dataService->enrichData($migrationCategories, 'category', $this->dataObject);
         $repository = $this->definitionInstanceRegistry->getRepository('category');
+        $repository->delete([['id' => $mainCatId]], $this->context);
         $repository->upsert($migrationCategories, $this->context);
+
+        //echo json_encode($migrationProducts);exit;
+
+        $migrationProducts = json_decode(
+            $this->dataService->processReplace(json_encode($migrationProducts), $this->dataObject, 'product'),
+            true
+        );
+        $this->dataService->enrichData($migrationProducts, 'product', $this->dataObject);
+
+        //echo json_encode($migrationProducts);exit;
+
+        $repository = $this->definitionInstanceRegistry->getRepository('product');
+        $repository->upsert($migrationProducts, $this->context);
     }
 
     /**
@@ -319,74 +377,23 @@ class MigrationService
         $this->salesChannelId = $salesChannelId;
     }
 
-    private function apiRequest(
-        string $method,
-        string $endpoint = '/Order',
-        ?array $data = null,
-        array $query = []
-    )
+    private function entferneEckigeKlammern($string)
     {
-        $headers = [
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json'
-        ];
-
-        $httpBody = json_encode($data);
-
-        $query = \guzzlehttp\psr7\build_query($query);
-
-        $title = sprintf("%s - %s", $method, $this->host . $endpoint . ($query ? "?{$query}" : ''));
-        $this->apiLog($title, [
-            'headers' => $headers,
-            'data' => $data
-        ]);
-
-        $request = new Request(
-            $method,
-            $this->host . $endpoint . ($query ? "?{$query}" : ''),
-            $headers,
-            $httpBody
-        );
-
-        $response = $this->client->send($request);
-
-        $statusCode = $response->getStatusCode();
-
-        if ($statusCode < 200 || $statusCode > 299) {
-            throw new \Exception(
-                sprintf('[%d] Error connecting to the API (%s)', $statusCode, $request->getUri()),
-                $statusCode
-            );
-        }
-
-        $contents = $response->getBody()->getContents();
-
-        try {
-            $this->apiLog('Response', json_decode($contents, true));
-
-            return json_decode($contents, true);
-        } catch (\Exception $exception) {
-            throw new \Exception(
-                sprintf('[%d] Error decoding JSON: %s', $statusCode, $contents),
-                $statusCode
-            );
-        }
+        $muster = '/\[(.*?)\]/';
+        $ohneKlammern = preg_replace($muster, '', $string);
+        return trim($ohneKlammern);
     }
 
-    private function apiLog(string $title, ?array $payload = null): void
+    private function getContentInBrackets($string)
     {
-        if (!$this->logEnabled) {
-            return;
-        }
+        preg_match('/\[(.*?)\]/', $string, $matches);
+        return isset($matches[1]) ? $matches[1] : null;
+    }
 
-        file_put_contents(
-            $this->logFile, sprintf(
-            "######### %s\n%s\n%s\n\n",
-            date(DATE_ATOM),
-            $title,
-            json_encode($payload, JSON_PRETTY_PRINT)
-        ),
-            FILE_APPEND
-        );
+    private function removeSpecialChars($string)
+    {
+        $pattern = '/[^a-zA-Z0-9]/';
+        $string = preg_replace($pattern, '', $string);
+        return $string;
     }
 }

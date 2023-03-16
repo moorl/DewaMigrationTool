@@ -3,7 +3,6 @@
 namespace Takeaway\Http\Requests;
 
 use Takeaway\Http\Request;
-use Takeaway\Models\Allergen;
 use Takeaway\Traits\MapsResponses;
 use Takeaway\Models\Category;
 use Takeaway\Models\Choice;
@@ -12,7 +11,6 @@ use Takeaway\Models\DeliverCosts;
 use Takeaway\Models\DeliverArea;
 use Takeaway\Models\PaymentMethod;
 use Takeaway\Models\Product;
-use Takeaway\Models\Restaurant;
 use Takeaway\Models\SideDish;
 
 /**
@@ -129,6 +127,14 @@ class GetRestaurantRequest extends Request
                                 'name' => 'allergens',
                                 'type' => 'object'
                             ],
+                            'fai.add' => [
+                                'name' => 'additives',
+                                'type' => 'object'
+                            ],
+                            'fai.xtr' => [
+                                'name' => 'extra',
+                                'type' => 'object'
+                            ],
                             'ss.sd' => [
                                 'name' => 'sideDishes',
                                 'type' => 'class',
@@ -150,10 +156,57 @@ class GetRestaurantRequest extends Request
                                                 'name' => 'allergens',
                                                 'type' => 'object'
                                             ],
+                                            'fai.add' => [
+                                                'name' => 'additives',
+                                                'type' => 'object'
+                                            ],
                                         ]
                                     ]
                                 ]
                             ],
+                            'sz.pr' => [
+                                'name' => 'products',
+                                'type' => 'class',
+                                'class' => [Product::class],
+                                'mapping' => [
+                                    'id' => 'id',
+                                    'nm' => 'name',
+                                    'ds' => 'description',
+                                    'pu' => 'image',
+                                    'ah' => '#orderMethods',
+                                    'pc' => '.deliveryPrice',
+                                    'tc' => '.pickupPrice',
+                                    'ss.sd' => [
+                                        'name' => 'sideDishes',
+                                        'type' => 'class',
+                                        'class' => [SideDish::class],
+                                        'mapping' => [
+                                            'nm' => 'name',
+                                            'tp' => 'type',
+                                            'cc.ch' => [
+                                                'name' => 'choices',
+                                                'type' => 'class',
+                                                'class' => [Choice::class],
+                                                'mapping' => [
+                                                    'id' => 'id',
+                                                    'nm' => 'name',
+                                                    'pc' => '.deliveryPrice',
+                                                    'tc' => '.pickupPrice',
+                                                    'xfm' => '!excludedFromMinimum',
+                                                    'fai.all' => [
+                                                        'name' => 'allergens',
+                                                        'type' => 'object'
+                                                    ],
+                                                    'fai.add' => [
+                                                        'name' => 'additives',
+                                                        'type' => 'object'
+                                                    ],
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                ]
+                            ]
                         ]
                     ]
                 ]
