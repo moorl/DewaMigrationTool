@@ -17,6 +17,7 @@ use Takeaway\Model;
  * @property null|\Takeaway\Models\Product[] $products
  * @property string|array $allergens
  * @property string|array $additives
+ * @property array $extra
  *  Available side dishes of the product.
  */
 class Product extends Model

@@ -92,11 +92,11 @@ class MigrationService
         $this->dataService->cleanUpShopwareTables($this->dataObject);
     }
 
-    public function getCover(Product $migrationProduct): ?array
+    public function getCover(Product $migrationProduct): array
     {
         $cover = $this->dataService->getMediaId($migrationProduct->image, 'product', $this->dataObject);
         if (!$cover) {
-            return null;
+            return [];
         }
         return ["cover" => ["id" => md5("cover" . $migrationProduct->id), "mediaId" => $cover]];
     }
@@ -144,11 +144,13 @@ class MigrationService
                 'name' => $this->getContentInBrackets($migrationProduct->name),
                 'position' => $pos,
                 'groupId' => 'e1a0160326131fd7bc82569ed88b743d'
-            ]]
+            ]],
+            'createdAt' => $this->dataObject->getCreatedAt()
         ]];
         $configuratorSettings = [[
             'id' => md5($variantNumber),
-            'optionId' => md5($this->getContentInBrackets($migrationProduct->name))
+            'optionId' => md5($this->getContentInBrackets($migrationProduct->name)),
+            'createdAt' => $this->dataObject->getCreatedAt()
         ]];
 
         foreach ($migrationProduct->products as $product) {
@@ -170,7 +172,8 @@ class MigrationService
                     'name' => $this->getContentInBrackets($product->name),
                     'position' => $pos,
                     'groupId' => 'e1a0160326131fd7bc82569ed88b743d'
-                ]]
+                ]],
+                'createdAt' => $this->dataObject->getCreatedAt()
             ];
             $configuratorSettings[] = [
                 'id' => md5($variantNumber),
@@ -207,6 +210,7 @@ class MigrationService
                     "name" => $choice->name,
                     "price" => $choice->deliveryPrice,
                     "properties" => !empty($properties) ? $properties : null,
+                    'createdAt' => $this->dataObject->getCreatedAt()
                 ];
             }
             $dewaOptions[] = [
@@ -218,8 +222,10 @@ class MigrationService
                     "id" => md5($sideDish->name),
                     "name" => $sideDish->name,
                     "type" => $sideDish->type == "1" ? 'radio' : 'checkbox',
-                    "items" => $choices
+                    "items" => $choices,
+                    'createdAt' => $this->dataObject->getCreatedAt()
                 ],
+                'createdAt' => $this->dataObject->getCreatedAt()
             ];
         }
         return $dewaOptions;
@@ -258,7 +264,7 @@ class MigrationService
         $migrationShops = [[
             'id' => $shop->getId(),
             'name' => $migrationData['name'],
-            //'mediaId' => $this->dataService->getMediaId($migrationData['logo'], 'cms_page', $this->dataObject),
+            'mediaId' => $this->dataService->getMediaId($migrationData['logo'], 'cms_page', $this->dataObject),
             'street' => $migrationData['street'],
             'city' => $migrationData['city'],
             'zipCode' => $migrationData['postalCode'],
@@ -276,19 +282,32 @@ class MigrationService
         foreach ($migrationData['categories'] as $migrationCategory) {
             /** @var Product $migrationProduct */
             foreach ($migrationCategory->products as $migrationProduct) {
-                if ("O5NQQ3NQQ" === $migrationProduct->id) {
-                    //dd($migrationProduct);
-                }
-                if ($migrationProduct->sideDishes) {
-                    //dd($migrationProduct);
-                }
-
                 $productNumber++;
 
                 $properties = array_merge(
                     $this->getProperties($migrationProduct->allergens),
                     $this->getProperties($migrationProduct->additives)
                 );
+
+                $extra = [];
+                if ($migrationProduct->extra) {
+                    $dw_deposit = isset($migrationProduct->extra['dep']) ? (float) $migrationProduct->extra['dep'] : null;
+                    $dw_caffeine = isset($migrationProduct->extra['caf']) ? (float) $migrationProduct->extra['caf'] : null;
+                    $dw_alcohol_percentage = isset($migrationProduct->extra['abv']) ? (float) $migrationProduct->extra['abv'] : null;
+                    $dw_min_age = $dw_alcohol_percentage ? ($dw_alcohol_percentage < 10 ? 16 : 18) : null;
+
+                    $extra = [
+                        "customFields" => [
+                            "dw_deposit" => $dw_deposit,
+                            "dw_caffeine" => $dw_caffeine,
+                            "dw_alcohol_percentage" => $dw_alcohol_percentage,
+                            "dw_min_age" => $dw_min_age,
+                        ],
+                        "unitId" => "064d48a99d26fada884d4fa28c018758",
+                        "referenceUnit" => 1,
+                        "purchaseUnit" => (float) $migrationProduct->extra['ltr'],
+                    ];
+                }
 
                 $migrationProducts[] = array_merge(
                     [
@@ -307,10 +326,11 @@ class MigrationService
                             ["id" => md5($migrationCategory->id)]
                         ],
                         "dewaOptions" => $this->getDewaOptions($migrationProduct),
-                        "_skipEnrichData" => true
+                        "createdAt" => $this->dataObject->getCreatedAt()
                     ],
-                    /*$this->getCover($migrationProduct),*/
-                    $this->getChildren($migrationProduct, $productNumber)
+                    $this->getCover($migrationProduct),
+                    $this->getChildren($migrationProduct, $productNumber),
+                    $extra
                 );
             }
 
@@ -319,7 +339,7 @@ class MigrationService
                 'id' => md5($migrationCategory->id),
                 'name' => $migrationCategory->name,
                 'description' => $migrationCategory->description,
-                //'mediaId' => $this->dataService->getMediaId($migrationCategory->image, 'category', $this->dataObject)
+                'mediaId' => $this->dataService->getMediaId($migrationCategory->image, 'category', $this->dataObject)
             ];
         }
 
@@ -333,7 +353,7 @@ class MigrationService
                 "active" => true,
                 "name" => $migrationData['name'],
                 'description' => $migrationCategory->description,
-                //'mediaId' => $this->dataService->getMediaId($migrationData['header'], 'category', $this->dataObject),
+                'mediaId' => $this->dataService->getMediaId($migrationData['header'], 'category', $this->dataObject),
                 "children" => $migrationCategoryChildren
             ]
         ];
@@ -347,15 +367,10 @@ class MigrationService
         $repository->delete([['id' => $mainCatId]], $this->context);
         $repository->upsert($migrationCategories, $this->context);
 
-        //echo json_encode($migrationProducts);exit;
-
         $migrationProducts = json_decode(
             $this->dataService->processReplace(json_encode($migrationProducts), $this->dataObject, 'product'),
             true
         );
-        $this->dataService->enrichData($migrationProducts, 'product', $this->dataObject);
-
-        //echo json_encode($migrationProducts);exit;
 
         $repository = $this->definitionInstanceRegistry->getRepository('product');
         $repository->upsert($migrationProducts, $this->context);
