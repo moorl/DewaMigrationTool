@@ -51,20 +51,36 @@ class MigrationService
         'new_n' => '{MD5:ALLERGENS_N}',
         'new_o' => '{MD5:ALLERGENS_O}',
         'new_p' => '{MD5:ALLERGENS_P}',
-        'new_1' => '{MD5:ADDITIVES_1}',
-        'new_2' => '{MD5:ADDITIVES_2}',
-        'new_3' => '{MD5:ADDITIVES_3}',
-        'new_4' => '{MD5:ADDITIVES_4}',
-        'new_5' => '{MD5:ADDITIVES_5}',
-        'new_6' => '{MD5:ADDITIVES_6}',
+        'new_r' => '{MD5:ALLERGENS_R}',
+        'new_1' => '{MD5:ADDITIVES_1}', // Süßungsmittel
+        'new_2' => '{MD5:ADDITIVES_3}', // Konservierungsstoffe
+        //'new_3' => '{MD5:ADDITIVES_2}', // Farbstoffe
+        'new_4' => '{MD5:ADDITIVES_14}', // Geschmacksverstärker
+        //'new_5' => '{MD5:ALLERGENS_1}',
+        'new_6' => '{MD5:ADDITIVES_6}', // Geschwärzt
         'new_7' => '{MD5:ADDITIVES_7}',
-        'new_8' => '{MD5:ADDITIVES_8}',
-        'new_9' => '{MD5:ADDITIVES_9}',
-        'new_10' => '{MD5:ADDITIVES_10}',
+        'new_8' => '{MD5:ADDITIVES_5}', // Phosphat
+        'new_9' => '{MD5:ADDITIVES_2}', // Farbstoffe
+        'new_10' => '{MD5:ADDITIVES_28}', //Koffein
         'new_11' => '{MD5:ADDITIVES_11}',
         'new_12' => '{MD5:ADDITIVES_12}',
         'new_13' => '{MD5:ADDITIVES_13}',
-        'new_14' => '{MD5:ADDITIVES_14}',
+        //'new_14' => '{MD5:ADDITIVES_14}',
+        'new_15' => '{MD5:ADDITIVES_15}',
+        'new_16' => '{MD5:ADDITIVES_16}',
+        'new_17' => '{MD5:ADDITIVES_17}',
+        'new_18' => '{MD5:ADDITIVES_18}',
+        'new_19' => '{MD5:ADDITIVES_19}',
+        'new_20' => '{MD5:ADDITIVES_20}',
+        'new_21' => '{MD5:ADDITIVES_21}',
+        'new_22' => '{MD5:ADDITIVES_22}',
+        'new_23' => '{MD5:ADDITIVES_23}',
+        'new_24' => '{MD5:ADDITIVES_24}',
+        'new_25' => '{MD5:ADDITIVES_25}',
+        'new_26' => '{MD5:ADDITIVES_26}',
+        'new_27' => '{MD5:ADDITIVES_27}',
+        //'new_28' => '{MD5:ADDITIVES_28}',
+        'new_29' => '{MD5:ADDITIVES_29}'
     ];
 
     public function __construct(
