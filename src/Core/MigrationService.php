@@ -14,6 +14,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Takeaway\Http\Requests\GetRestaurantRequest;
+use Takeaway\Models\Product;
 
 class MigrationService
 {
@@ -27,6 +28,32 @@ class MigrationService
     private Context $context;
     private DataService $dataService;
     private DataInterface $dataObject;
+    private array $allergensMapping = [
+        'new_a' => '{MD5:ALLERGENS_A}',
+        'new_a1' => '{MD5:ALLERGENS_A1}',
+        'new_a2' => '{MD5:ALLERGENS_A2}',
+        'new_a3' => '{MD5:ALLERGENS_A3}',
+        'new_a4' => '{MD5:ALLERGENS_A4}',
+        'new_a5' => '{MD5:ALLERGENS_A5}',
+        'new_b' => '{MD5:ALLERGENS_B}',
+        'new_c' => '{MD5:ALLERGENS_C}',
+        'new_d' => '{MD5:ALLERGENS_D}',
+        'new_e' => '{MD5:ALLERGENS_E}',
+        'new_f' => '{MD5:ALLERGENS_F}',
+        'new_g' => '{MD5:ALLERGENS_G}',
+        'new_h' => '{MD5:ALLERGENS_H}',
+        'new_h1' => '{MD5:ALLERGENS_H1}',
+        'new_h2' => '{MD5:ALLERGENS_H2}',
+        'new_h3' => '{MD5:ALLERGENS_H3}',
+        'new_h4' => '{MD5:ALLERGENS_H4}',
+        'new_h5' => '{MD5:ALLERGENS_H5}',
+        'new_l' => '{MD5:ALLERGENS_L}',
+        'new_m' => '{MD5:ALLERGENS_M}',
+        'new_n' => '{MD5:ALLERGENS_N}',
+        'new_o' => '{MD5:ALLERGENS_O}',
+        'new_p' => '{MD5:ALLERGENS_P}',
+        'new_r' => '{MD5:ALLERGENS_R}',
+    ];
 
     public function __construct(
         DefinitionInstanceRegistry $definitionInstanceRegistry,
@@ -88,7 +115,7 @@ class MigrationService
         $migrationShops = [[
             'id' => $shop->getId(),
             'name' => $migrationData['name'],
-            'mediaId' => $this->dataService->getMediaId($migrationData['logo'], 'cms_page', $this->dataObject),
+            //'mediaId' => $this->dataService->getMediaId($migrationData['logo'], 'cms_page', $this->dataObject),
             'street' => $migrationData['street'],
             'city' => $migrationData['city'],
             'zipCode' => $migrationData['postalCode'],
@@ -102,16 +129,17 @@ class MigrationService
         $repository = $this->definitionInstanceRegistry->getRepository('dewa_shop');
         $repository->upsert($migrationShops, $this->context);
 
-        //dump($migrationData);exit;
-
         $migrationCategoryChildren = [];
         foreach ($migrationData['categories'] as $migrationCategory) {
             $migrationProducts = [];
 
+            /** @var Product $migrationProduct */
             foreach ($migrationCategory->__get('products') as $migrationProduct) {
+                //dd($migrationProduct);
+
                 $productNumber++;
 
-                $cover = $this->dataService->getMediaId($migrationProduct->image, 'product', $this->dataObject);
+                /*$cover = $this->dataService->getMediaId($migrationProduct->image, 'product', $this->dataObject);
                 if ($cover) {
                     $cover = [
                         "cover" => [
@@ -121,6 +149,102 @@ class MigrationService
                     ];
                 } else {
                     $cover = [];
+                }*/
+
+                $cover = [];
+                $dewaOptions = [];
+                $configuratorSettings = [];
+                $children = [];
+                if ($migrationProduct->sideDishes) {
+                    if (is_array($migrationProduct->sideDishes)) {
+                        foreach ($migrationProduct->sideDishes as $sideDish) {
+                            if ($sideDish->type == "1") {
+                                foreach ($sideDish->choices as $choice) {
+                                    $children[] = [
+                                        'id' => md5($migrationProduct->id.$choice->id),
+                                        "productNumber" => str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT) . "." . $choice->id,
+                                        "taxId" => "{TAX_ID_REDUCED}",
+                                        "price" => sprintf("{PRICE:%s|R}", $choice->deliveryPrice),
+                                        "options" => [
+                                            [
+                                                "id" => md5($choice->id),
+                                                "name" => $choice->name,
+                                                "group" => [
+                                                    "id" => md5($sideDish->name),
+                                                    "name" => $sideDish->name,
+                                                ]
+                                            ]
+                                        ]
+                                    ];
+
+                                    dd($children);
+
+                                    $configuratorSettings[] = [
+                                        'optionId' => md5($choice->id)
+                                    ];
+                                }
+                            } else {
+                                $choices = [];
+                                foreach ($sideDish->choices as $choice) {
+                                    $properties = [];
+                                    if (isset($choice->allergens['id'])) {
+                                        if (is_array($choice->allergens['id'])) {
+                                            foreach ($choice->allergens['id'] as $allergen) {
+                                                if (isset($this->allergensMapping[$allergen])) {
+                                                    $properties[] = [
+                                                        'id' => $this->allergensMapping[$allergen]
+                                                    ];
+                                                }
+                                            }
+                                        } else {
+                                            if (isset($this->allergensMapping[$choice->allergens['id']])) {
+                                                $properties[] = [
+                                                    'id' => $this->allergensMapping[$choice->allergens['id']]
+                                                ];
+                                            }
+                                        }
+                                    }
+
+                                    $choices[] = [
+                                        "id" => md5($choice->id),
+                                        "name" => $choice->name,
+                                        "price" => $choice->deliveryPrice,
+                                        "properties" => $properties
+                                    ];
+                                }
+
+                                $dewaOptions[] = [
+                                    'id' => md5($migrationProduct->id . $sideDish->name),
+                                    'name' => $sideDish->name,
+                                    "option" => [
+                                        "id" => md5($sideDish->name),
+                                        "name" => $sideDish->name,
+                                        "type" => 'checkbox',
+                                        "items" => $choices
+                                    ],
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                $properties = [];
+                if (isset($migrationProduct->allergens['id'])) {
+                    if (is_array($migrationProduct->allergens['id'])) {
+                        foreach ($migrationProduct->allergens['id'] as $allergen) {
+                            if (isset($this->allergensMapping[$allergen])) {
+                                $properties[] = [
+                                    'id' => $this->allergensMapping[$allergen]
+                                ];
+                            }
+                        }
+                    } else {
+                        if (isset($this->allergensMapping[$migrationProduct->allergens['id']])) {
+                            $properties[] = [
+                                'id' => $this->allergensMapping[$migrationProduct->allergens['id']]
+                            ];
+                        }
+                    }
                 }
 
                 $migrationProducts[] = array_merge([
@@ -128,16 +252,20 @@ class MigrationService
                     'name' => $migrationProduct->name,
                     'description' => $migrationProduct->description,
                     "productNumber" => str_pad((string)$productNumber, 4, '0', STR_PAD_LEFT),
-                    "stock" => 100,
+                    "stock" => 0,
                     "taxId" => "{TAX_ID_REDUCED}",
-                    "price" => $migrationProduct->deliveryPrice,
-                    "listPrice" => $migrationProduct->deliveryPrice > 0 ? $migrationProduct->deliveryPrice : null,
+                    "price" => sprintf("{PRICE:%s|R}", $migrationProduct->deliveryPrice),
                     "visibilities" => [
                         [
+                            "id" => md5($migrationProduct->id . "1"),
                             "salesChannelId" => "{SALES_CHANNEL_ID}",
                             "visibility" => 30
                         ]
                     ],
+                    "properties" => $properties,
+                    "children" => $children,
+                    "configuratorSettings" => $configuratorSettings,
+                    "dewaOptions" => $dewaOptions,
                 ], $cover);
             }
 
@@ -145,6 +273,7 @@ class MigrationService
                 "active" => true,
                 'id' => md5($migrationCategory->id),
                 'name' => $migrationCategory->name,
+                'description' => $migrationCategory->description,
                 'mediaId' => $this->dataService->getMediaId($migrationCategory->image, 'category', $this->dataObject),
                 'products' => $migrationProducts
             ];
@@ -156,14 +285,18 @@ class MigrationService
                 "cmsPageId" => "{CMS_PAGE_ID}",
                 "active" => true,
                 "name" => $migrationData['name'],
+                'description' => $migrationCategory->description,
                 'mediaId' => $this->dataService->getMediaId($migrationData['header'], 'category', $this->dataObject),
                 "children" => $migrationCategoryChildren
             ]
         ];
 
-        $migrationCategories = json_decode(strtr(json_encode($migrationCategories), $this->dataObject->getGlobalReplacers()), true);
+        $migrationCategories = json_decode(
+            $this->dataService->processReplace(json_encode($migrationCategories), $this->dataObject),
+            true
+        );
 
-        $this->dataService->enrichData($migrationCategories, 'category', $this->dataObject);
+        echo json_encode($migrationCategories);exit;
 
         /** @var EntityRepositoryInterface $repository */
         $repository = $this->definitionInstanceRegistry->getRepository('category');

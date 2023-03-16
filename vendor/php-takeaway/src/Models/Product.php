@@ -14,6 +14,7 @@ use Takeaway\Model;
  * @property float $deliveryPrice Delivery price of the product.
  * @property float $pickupPrice Pickup price of the product.
  * @property \Takeaway\Models\SideDish[] $sideDishes
+ * @property \Takeaway\Models\Allergen[] $allergens
  *  Available side dishes of the product.
  */
 class Product extends Model

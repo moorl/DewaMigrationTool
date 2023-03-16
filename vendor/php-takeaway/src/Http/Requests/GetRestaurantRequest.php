@@ -3,6 +3,7 @@
 namespace Takeaway\Http\Requests;
 
 use Takeaway\Http\Request;
+use Takeaway\Models\Allergen;
 use Takeaway\Traits\MapsResponses;
 use Takeaway\Models\Category;
 use Takeaway\Models\Choice;
@@ -110,6 +111,7 @@ class GetRestaurantRequest extends Request
                 'mapping' => [
                     'id' => 'id',
                     'nm' => 'name',
+                    'ds' => 'description',
                     'cti' => 'image',
                     'ps.pr' => [
                         'name' => 'products',
@@ -123,6 +125,10 @@ class GetRestaurantRequest extends Request
                             'ah' => '#orderMethods',
                             'pc' => '.deliveryPrice',
                             'tc' => '.pickupPrice',
+                            'fai.all' => [
+                                'name' => 'allergens',
+                                'type' => 'object'
+                            ],
                             'ss.sd' => [
                                 'name' => 'sideDishes',
                                 'type' => 'class',
@@ -139,7 +145,11 @@ class GetRestaurantRequest extends Request
                                             'nm' => 'name',
                                             'pc' => '.deliveryPrice',
                                             'tc' => '.pickupPrice',
-                                            'xfm' => '!excludedFromMinimum'
+                                            'xfm' => '!excludedFromMinimum',
+                                            'fai.all' => [
+                                                'name' => 'allergens',
+                                                'type' => 'object'
+                                            ],
                                         ]
                                     ]
                                 ]

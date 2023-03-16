@@ -210,22 +210,25 @@ trait MapsResponses
             throw new ParseException('Data specification is invalid!');
         }
 
-        switch ($local['type']) {
-            case 'object':
-                // Change `<a>a</a><b>b</b>` to `['a' => 'a', 'b' => 'b']`.
-                // We simply cast to array; SimpleXML does the rest for us.
-                return $result[$local['name']] = (array) $value;
 
-            case 'class':
-                // Map all data in `mapping` using this method and put all the
-                // data in a model.
-                list($key, $data) = $this->resolveClass($value, $local);
+            switch ($local['type']) {
+                case 'object':
+                    // Change `<a>a</a><b>b</b>` to `['a' => 'a', 'b' => 'b']`.
+                    // We simply cast to array; SimpleXML does the rest for us.
+                    return $result[$local['name']] = (array) $value;
 
-                return $result[$key] = $data;
+                case 'class':
+                    // Map all data in `mapping` using this method and put all the
+                    // data in a model.
+                    list($key, $data) = $this->resolveClass($value, $local);
 
-            default:
-                throw new ParseException('Unknown parse type '.$local['type'].' in specification!');
-        }
+                    return $result[$key] = $data;
+
+                default:
+                    throw new ParseException('Unknown parse type '.$local['type'].' in specification!');
+            }
+
+
     }
 
     /**

@@ -9,6 +9,7 @@ use Takeaway\Model;
  *
  * @property string $id Unique identifier of the category.
  * @property string $name Name of the category.
+ * @property string $description Description of the category.
  * @property string $image URL to the image of the category.
  * @property \Takeaway\Models\Product[] $products
  *  Products of the category.

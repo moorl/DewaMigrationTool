@@ -24,7 +24,7 @@ Module.register('dewa-migration-settings', {
             to: 'dewa.migration.settings.migration',
             group: 'plugins',
             id: 'appflix-setting-migration',
-            iconComponent: 'appflix-svg-appflix',
+            icon: 'regular-activity',
             label: 'dewa-shop.navigation.migration'
         }
     ]

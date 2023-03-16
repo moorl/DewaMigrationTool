@@ -3,14 +3,11 @@
 namespace Appflix\DewaMigrationTool\Controller;
 
 use Appflix\DewaMigrationTool\Core\MigrationService;
-use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Class SettingsController
- * @package Appflix\DewaShop\Administration\Controller
  * @Route(defaults={"_routeScope"={"api"}})
  */
 class MigrationController
