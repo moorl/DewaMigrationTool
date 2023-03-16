@@ -22,6 +22,7 @@ class MigrationService
     private SystemConfigService $systemConfigService;
     private string $logFile;
     private string $salesChannelId;
+    private string $propertyGroupId = 'e1a0160326131fd7bc82569ed88b743d';
     private bool $logEnabled;
     private Context $context;
     private DataService $dataService;
@@ -143,7 +144,7 @@ class MigrationService
                 'id' => md5($this->getContentInBrackets($migrationProduct->name)),
                 'name' => $this->getContentInBrackets($migrationProduct->name),
                 'position' => $pos,
-                'groupId' => 'e1a0160326131fd7bc82569ed88b743d'
+                'groupId' => $this->propertyGroupId
             ]],
             'createdAt' => $this->dataObject->getCreatedAt()
         ]];
@@ -171,7 +172,7 @@ class MigrationService
                     'id' => md5($this->getContentInBrackets($product->name)),
                     'name' => $this->getContentInBrackets($product->name),
                     'position' => $pos,
-                    'groupId' => 'e1a0160326131fd7bc82569ed88b743d'
+                    'groupId' => $this->propertyGroupId
                 ]],
                 'createdAt' => $this->dataObject->getCreatedAt()
             ];
@@ -277,6 +278,15 @@ class MigrationService
         $repository = $this->definitionInstanceRegistry->getRepository('dewa_shop');
         $repository->upsert($migrationShops, $this->context);
 
+        $repository = $this->definitionInstanceRegistry->getRepository('property_group');
+        $repository->upsert([
+            [
+                "id" => $this->propertyGroupId,
+                "name" => "Größe",
+                "sortingType" => "position",
+            ]
+        ], $this->context);
+
         $migrationProducts = [];
         $migrationCategoryChildren = [];
         foreach ($migrationData['categories'] as $migrationCategory) {
@@ -303,7 +313,11 @@ class MigrationService
                             "dw_alcohol_percentage" => $dw_alcohol_percentage,
                             "dw_min_age" => $dw_min_age,
                         ],
-                        "unitId" => "064d48a99d26fada884d4fa28c018758",
+                        "unit" => [
+                            "id" => "{ID:UNIT_L}",
+                            "shortCode" => "l",
+                            "name" => "Liter",
+                        ],
                         "referenceUnit" => 1,
                         "purchaseUnit" => (float) $migrationProduct->extra['ltr'],
                     ];
